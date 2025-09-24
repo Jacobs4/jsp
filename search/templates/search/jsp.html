@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>jsp</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(120deg, #f0f4f8 0%, #e0e7ef 100%);
+            margin: 0;
+            min-height: 100vh;
+        }
+        .search-box {
+            background: #fff;
+            max-width: 500px;
+            margin: 60px auto 0 auto;
+            border-radius: 18px;
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.18);
+            padding: 36px 32px 32px 32px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            color: #2b3a55;
+            margin-bottom: 18px;
+            letter-spacing: 2px;
+        }
+        form {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 18px;
+        }
+        input[type="text"] {
+            width: 70%;
+            padding: 12px 16px;
+            font-size: 1.1em;
+            border: 1px solid #bfc9d9;
+            border-radius: 8px;
+            outline: none;
+            transition: border 0.2s;
+        }
+        input[type="text"]:focus {
+            border: 1.5px solid #2b3a55;
+        }
+        button {
+            padding: 12px 28px;
+            font-size: 1.1em;
+            background: linear-gradient(90deg, #2b3a55 0%, #4b6cb7 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            box-shadow: 0 2px 8px 0 rgba(31, 38, 135, 0.08);
+            transition: background 0.2s, transform 0.1s;
+        }
+        button:hover {
+            background: linear-gradient(90deg, #4b6cb7 0%, #2b3a55 100%);
+            transform: translateY(-2px) scale(1.03);
+        }
+        .results {
+            margin-top: 32px;
+            text-align: left;
+        }
+        .results h2 {
+            color: #2b3a55;
+            font-size: 1.3em;
+            margin-bottom: 12px;
+        }
+        .result-item {
+            background: #f7faff;
+            padding: 14px 18px;
+            border-radius: 7px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4b6cb7;
+            font-size: 1.08em;
+            color: #222;
+            box-shadow: 0 1px 4px 0 rgba(31, 38, 135, 0.04);
+        }
+        .result-item:last-child {
+            margin-bottom: 0;
+        }
+        .no-results {
+            color: #b0b8c9;
+            font-style: italic;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="search-box">
+    <h1>jsp</h1>
+        <form action="/search/results/" method="get">
+            <input type="text" name="q" placeholder="Search repository..." value="{{ query|default:'' }}" required />
+            <button type="submit">Search</button>
+        </form>
+        {% if results is not None %}
+        <div class="results">
+            <h2>Results{% if query %} for "{{ query }}"{% endif %}</h2>
+            {% if results %}
+                {% for item in results %}
+                    <div class="result-item">{{ item }}</div>
+                {% endfor %}
+            {% else %}
+                <div class="no-results">No results found.</div>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>
