@@ -1,0 +1,6 @@
+Django
+gunicorn
+requests
+wikipedia-api
+meilisearch
+opensearch-py

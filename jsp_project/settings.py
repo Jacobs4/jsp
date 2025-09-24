@@ -19,13 +19,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
+
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "django-insecure-opp*po6cz2=epqek4%=xqmjz9j_s*pge-^lw)u+#0a#vnkm1g^"
+SECRET_KEY = os.environ.get("DJANGO_SECRET_KEY", "django-insecure-opp*po6cz2=epqek4%=xqmjz9j_s*pge-^lw)u+#0a#vnkm1g^")
+
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+import os
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -112,12 +115,17 @@ USE_I18N = True
 USE_TZ = True
 
 
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
+STATIC_URL = "/static/"
+STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
 
-STATIC_URL = "static/"
+# Heroku: turn off debug in production
+DEBUG = os.environ.get("DJANGO_DEBUG", "False") == "True"
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+

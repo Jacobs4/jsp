@@ -1,0 +1,1 @@
+web: gunicorn jsp_project.wsgi

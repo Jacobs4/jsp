@@ -28,28 +28,31 @@ def search_results(request):
 			# Example: search all indices for the query in 'content' field
 			response = client.search(
 				body={
-					'query': {
-						'multi_match': {
-							'query': query,
-							'fields': ['*']
-						}
-					}
-				},
-				size=5
-			)
-			for hit in response['hits']['hits']:
-				opensearch_results.append({
-					'index': hit.get('_index', ''),
-					'score': hit.get('_score', 0),
-					'source': hit.get('_source', {})
-				})
-		except Exception as e:
-			opensearch_results.append({'index': '', 'score': 0, 'source': {'error': f'OpenSearch error: {e}'}})
-		# Wikipedia-API Python package integration
-		try:
-			import wikipediaapi
-			wiki_wiki = wikipediaapi.Wikipedia(
-				language='en',
+					try:
+						api_key = os.environ.get('YOUTUBE_API_KEY')
+						if not api_key:
+							youtube_results.append({'title': 'YouTube API key not set', 'url': ''})
+						else:
+							yt_url = "https://www.googleapis.com/youtube/v3/search"
+							params = {
+								'part': 'snippet',
+								'q': query,
+								'type': 'video',
+								'maxResults': 3,
+								'key': api_key
+							}
+							yt_resp = requests.get(yt_url, params=params, timeout=5)
+							if yt_resp.status_code == 200:
+								yt_data = yt_resp.json()
+								for item in yt_data.get('items', []):
+									video_id = item['id']['videoId']
+									title = item['snippet']['title']
+									url = f"https://www.youtube.com/watch?v={video_id}"
+									youtube_results.append({'title': title, 'url': url})
+							else:
+								youtube_results.append({'title': 'YouTube API error', 'url': ''})
+					except Exception as e:
+						youtube_results.append({'title': f'YouTube API error: {e}', 'url': ''})
 				user_agent='jsp-search-engine/1.0 (https://github.com/Jacobs4/jsp)'
 			)
 			page_py = wiki_wiki.page(query)
