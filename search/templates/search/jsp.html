@@ -106,6 +106,19 @@
             {% endif %}
         </div>
         {% endif %}
+
+        {% if youtube_results %}
+        <div class="results">
+            <h2>YouTube Results{% if query %} for "{{ query }}"{% endif %}</h2>
+            {% for yt in youtube_results %}
+                {% if yt.url %}
+                    <div class="result-item"><a href="{{ yt.url }}" target="_blank">{{ yt.title }}</a></div>
+                {% else %}
+                    <div class="result-item">{{ yt.title }}</div>
+                {% endif %}
+            {% endfor %}
+        </div>
+        {% endif %}
     </div>
 </body>
 </html>

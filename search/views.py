@@ -9,8 +9,10 @@ def search_page(request):
 
 def search_results(request):
 	import os
+	import requests
 	query = request.GET.get('q', '')
 	results = []
+	youtube_results = []
 	if query:
 		root_dir = '/workspaces/jsp'
 		file_types = ['.md', '.py']
@@ -28,4 +30,29 @@ def search_results(request):
 									results.append(f"{file} (line {i}): {line.strip()}")
 					except Exception as e:
 						results.append(f"Error reading {file}: {e}")
-	return render(request, 'search/jsp.html', {'query': query, 'results': results})
+
+		# YouTube Data API integration
+		try:
+			api_key = "AIzaSyCeL3KjoBgHJvplyX62GYRD6tIhcsG9mtc"
+			yt_url = "https://www.googleapis.com/youtube/v3/search"
+			params = {
+				'part': 'snippet',
+				'q': query,
+				'type': 'video',
+				'maxResults': 3,
+				'key': api_key
+			}
+			yt_resp = requests.get(yt_url, params=params, timeout=5)
+			if yt_resp.status_code == 200:
+				yt_data = yt_resp.json()
+				for item in yt_data.get('items', []):
+					video_id = item['id']['videoId']
+					title = item['snippet']['title']
+					url = f"https://www.youtube.com/watch?v={video_id}"
+					youtube_results.append({'title': title, 'url': url})
+			else:
+				youtube_results.append({'title': 'YouTube API error', 'url': ''})
+		except Exception as e:
+			youtube_results.append({'title': f'YouTube API error: {e}', 'url': ''})
+
+	return render(request, 'search/jsp.html', {'query': query, 'results': results, 'youtube_results': youtube_results})
