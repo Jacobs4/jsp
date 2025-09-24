@@ -1,3 +1,15 @@
+        {% if opensearch_results %}
+        <div class="results">
+            <h2>OpenSearch Results</h2>
+            {% for osr in opensearch_results %}
+                <div class="result-item">
+                    <strong>Index:</strong> {{ osr.index }}<br>
+                    <strong>Score:</strong> {{ osr.score }}<br>
+                    <strong>Source:</strong> <pre style="white-space:pre-wrap;word-break:break-all;">{{ osr.source|safe }}</pre>
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
 <!DOCTYPE html>
 <html>
 <head>
@@ -107,15 +119,39 @@
         </div>
         {% endif %}
 
-        {% if youtube_results %}
+        {% if wikipedia_results %}
         <div class="results">
-            <h2>YouTube Results{% if query %} for "{{ query }}"{% endif %}</h2>
-            {% for yt in youtube_results %}
-                {% if yt.url %}
-                    <div class="result-item"><a href="{{ yt.url }}" target="_blank">{{ yt.title }}</a></div>
-                {% else %}
-                    <div class="result-item">{{ yt.title }}</div>
-                {% endif %}
+            <h2>Wikipedia</h2>
+            {% for wiki in wikipedia_results %}
+                <div class="result-item">
+                    <strong>{{ wiki.title }}</strong><br>
+                    {{ wiki.summary }}<br>
+                    {% if wiki.url %}<a href="{{ wiki.url }}" target="_blank">Read more</a>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if duckduckgo_results %}
+        <div class="results">
+            <h2>DuckDuckGo</h2>
+            {% for ddg in duckduckgo_results %}
+                <div class="result-item">
+                    <strong>{{ ddg.heading }}</strong><br>
+                    {{ ddg.abstract }}<br>
+                    {% if ddg.url %}<a href="{{ ddg.url }}" target="_blank">More info</a>{% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+
+        {% if meilisearch_results %}
+        <div class="results">
+            <h2>Meilisearch Results</h2>
+            {% for ms in meilisearch_results %}
+                <div class="result-item">
+                    <pre style="white-space:pre-wrap;word-break:break-all;">{{ ms|safe }}</pre>
+                </div>
             {% endfor %}
         </div>
         {% endif %}
