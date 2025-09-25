@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OmniSearch Portal</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Custom styles for a smooth experience */
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .search-card {
+            background-color: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(209, 213, 219, 0.3);
+        }
+        .title-gradient {
+            background: -webkit-linear-gradient(45deg, #2a47c5, #6a82fb);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        /* Animation for result items */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .fade-in {
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-50 to-blue-100 flex items-start justify-center min-h-screen p-4 sm:p-6 md:p-8">
+
+    <div class="search-card w-full max-w-2xl mx-auto rounded-2xl shadow-2xl p-6 sm:p-8 mt-10 sm:mt-20">
+        <!-- Header Section -->
+        <div class="text-center mb-8">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 tracking-tight title-gradient">OmniSearch</h1>
+            <p class="text-slate-500 mt-2">Search across multiple platforms from one place.</p>
+        </div>
+
+        <!-- Search Form -->
+        <form id="search-form" class="flex flex-col sm:flex-row gap-3">
+            <input 
+                type="text" 
+                id="search-input"
+                name="q" 
+                placeholder="e.g., 'History of the Internet'" 
+                class="w-full p-3 text-base border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition duration-200 ease-in-out shadow-sm" 
+                required 
+            />
+            <button 
+                type="submit" 
+                class="bg-blue-600 text-white font-semibold py-3 px-6 rounded-lg shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform hover:-translate-y-1 duration-200 ease-in-out flex items-center justify-center gap-2"
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                <span>Search</span>
+            </button>
+        </form>
+
+        <!-- Results Area -->
+        <div id="results-container" class="mt-8 text-left">
+            <!-- Loading indicator will be shown here -->
+            <!-- Error messages will be shown here -->
+            <!-- Search results will be dynamically inserted here -->
+        </div>
+
+    </div>
+
+    <script>
+        const searchForm = document.getElementById('search-form');
+        const searchInput = document.getElementById('search-input');
+        const resultsContainer = document.getElementById('results-container');
+
+        searchForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            renderLoading();
+
+            try {
+                // Fetch results from multiple sources concurrently
+                const [wikiResults, ddgResults] = await Promise.all([
+                    fetchWikipedia(query),
+                    fetchDuckDuckGoMock(query)
+                ]);
+                
+                renderResults(query, { wikiResults, ddgResults });
+
+            } catch (error) {
+                console.error('Search failed:', error);
+                renderError('Something went wrong. Please try again later.');
+            }
+        });
+
+        /**
+         * Fetches search results from the Wikipedia API.
+         * @param {string} query - The search term.
+         * @returns {Promise<Array>} A promise that resolves to an array of Wikipedia results.
+         */
+        async function fetchWikipedia(query) {
+            const endpoint = `https://en.wikipedia.org/w/api.php?action=query&list=search&prop=info&inprop=url&utf8=&format=json&origin=*&srlimit=3&srsearch=${encodeURIComponent(query)}`;
+            const response = await fetch(endpoint);
+            if (!response.ok) {
+                throw new Error('Failed to fetch from Wikipedia');
+            }
+            const data = await response.json();
+            
+            // Fetch summaries for each result
+            const pageIds = data.query.search.map(item => item.pageid).join('|');
+            if (!pageIds) return [];
+
+            const summaryEndpoint = `https://en.wikipedia.org/w/api.php?action=query&prop=extracts|info&exintro&explaintext&inprop=url&format=json&origin=*&pageids=${pageIds}`;
+            const summaryResponse = await fetch(summaryEndpoint);
+            if (!summaryResponse.ok) {
+                 throw new Error('Failed to fetch summaries from Wikipedia');
+            }
+            const summaryData = await summaryResponse.json();
+
+            return data.query.search.map(item => {
+                const page = summaryData.query.pages[item.pageid];
+                return {
+                    title: item.title,
+                    summary: page.extract,
+                    url: page.fullurl,
+                };
+            });
+        }
+        
+        /**
+         * Mocks a response from DuckDuckGo. In a real application, this would be a server-side API call.
+         * @param {string} query - The search term.
+         * @returns {Promise<Array>} A promise that resolves to an array of mock results.
+         */
+        function fetchDuckDuckGoMock(query) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    resolve([
+                        {
+                            heading: `Understanding "${query}"`,
+                            abstract: `This result provides a comprehensive overview of ${query}, exploring its core concepts and implications.`,
+                            url: '#'
+                        },
+                        {
+                            heading: `Recent Developments in ${query}`,
+                            abstract: `An article discussing the latest trends and news related to the field of ${query}.`,
+                            url: '#'
+                        }
+                    ]);
+                }, 300); // Simulate network delay
+            });
+        }
+        
+        /**
+         * Renders the loading state in the results container.
+         */
+        function renderLoading() {
+            resultsContainer.innerHTML = `
+                <div class="flex justify-center items-center mt-6">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                    <span class="ml-3 text-slate-600">Searching...</span>
+                </div>
+            `;
+        }
+        
+        /**
+         * Renders an error message in the results container.
+         * @param {string} message - The error message to display.
+         */
+        function renderError(message) {
+            resultsContainer.innerHTML = `
+                <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg" role="alert">
+                    <p class="font-bold">Error</p>
+                    <p>${message}</p>
+                </div>
+            `;
+        }
+
+        /**
+         * Renders the search results in the UI.
+         * @param {string} query - The user's search query.
+         * @param {object} results - An object containing results from different sources.
+         */
+        function renderResults(query, results) {
+            const { wikiResults = [], ddgResults = [] } = results;
+
+            if (wikiResults.length === 0 && ddgResults.length === 0) {
+                resultsContainer.innerHTML = `<div class="text-center text-slate-500 italic mt-4">No results found for "${query}".</div>`;
+                return;
+            }
+
+            let html = '';
+
+            // Render Wikipedia results
+            if (wikiResults.length > 0) {
+                html += `
+                    <div class="mb-8">
+                        <h2 class="text-xl font-semibold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 5.5A3.5 3.5 0 0 1 8.5 2H12v7H8.5A3.5 3.5 0 0 1 5 5.5z"/><path d="M12 2h3.5a3.5 3.5 0 1 1 0 7H12V2z"/><path d="M12 12.5a3.5 3.5 0 1 1 7 0 3.5 3.5 0 1 1-7 0z"/><path d="M5 19.5A3.5 3.5 0 0 1 8.5 16H12v3.5a3.5 3.5 0 1 1-7 0z"/><path d="M5 12.5A3.5 3.5 0 0 1 8.5 9H12v7H8.5A3.5 3.5 0 0 1 5 12.5z"/></svg>
+                            <span>Wikipedia Results</span>
+                        </h2>
+                        ${wikiResults.map((item, index) => `
+                            <div class="bg-white/80 p-4 rounded-lg mb-3 border-l-4 border-blue-500 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 fade-in" style="animation-delay: ${index * 100}ms;">
+                                <h3 class="font-semibold text-lg text-slate-800">${item.title}</h3>
+                                <p class="text-slate-600 text-sm my-2">${item.summary.substring(0, 150)}...</p>
+                                <a href="${item.url}" target="_blank" class="text-blue-600 hover:underline text-sm font-medium">Read more &rarr;</a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Render DuckDuckGo results
+            if (ddgResults.length > 0) {
+                 html += `
+                    <div>
+                        <h2 class="text-xl font-semibold text-slate-700 mb-4 border-b pb-2 flex items-center gap-2">
+                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 18a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/><path d="M12 12a6 6 0 1 0 0-12 6 6 0 0 0 0 12z"/></svg>
+                             <span>DuckDuckGo Results</span>
+                        </h2>
+                        ${ddgResults.map((item, index) => `
+                             <div class="bg-white/80 p-4 rounded-lg mb-3 border-l-4 border-emerald-500 shadow-md transition-all duration-300 hover:shadow-xl hover:-translate-y-1 fade-in" style="animation-delay: ${index * 100}ms;">
+                                <h3 class="font-semibold text-lg text-slate-800">${item.heading}</h3>
+                                <p class="text-slate-600 text-sm my-2">${item.abstract}</p>
+                                <a href="${item.url}" target="_blank" class="text-emerald-600 hover:underline text-sm font-medium">More info &rarr;</a>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            resultsContainer.innerHTML = html;
+        }
+
+    </script>
+</body>
+</html>
+
