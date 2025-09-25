@@ -34,7 +34,7 @@ No complex setup is required! You can run this project in two simple steps:
 
 Clone the repository:
 
-git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
+git clone [https://github.com/jacobs4/jsp](https://github.com/jacobs4/jsp.git)
 
 Open the file:
 Navigate to the project directory and open the jsps.html file in your favorite web browser.
